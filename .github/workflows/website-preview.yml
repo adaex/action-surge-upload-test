@@ -20,8 +20,7 @@ jobs:
         run: |
           export DEPLOY_DOMAIN=https://preview-${PULL_REQUEST_NUMBER}-element-plus.surge.sh
           echo "Deploy to $DEPLOY_DOMAIN"
-          npx surge --project ./dist --domain $DEPLOY_DOMAIN
+          npx surge --project ./dist --domain $DEPLOY_DOMAIN --token $SURGE_TOKEN
         env:
-          SURGE_LOGIN: ${{ secrets.SURGE_LOGIN }}
           SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }}
 
