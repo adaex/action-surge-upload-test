@@ -11,7 +11,9 @@ jobs:
   on-success:
     name: Build successfully
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success' }}
+    env:
+      PULL_REQUEST_NUMBER: ${{ github.event.workflow_run.pull_requests.number }}
     steps:
       - name: Show event
         run: |
@@ -19,21 +21,10 @@ jobs:
         env:
           GITHUB_JSON: ${{ toJSON(github.event) }}
 
-      - name: Download pr number
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: ${{ github.event.workflow_run.workflow_id }}
-          name: pr
-
-      - name: Output pr number
-        id: pr
-        run: echo "::set-output name=id::$(<pr.txt)"
-
       - name: Download artifact
         uses: dawidd6/action-download-artifact@v2
         with:
-          workflow: ${{ github.event.workflow_run.workflow_id }}
-          workflow_conclusion: success
+          run_id: ${{ github.event.workflow_run.id }}
           name: website
 
       - name: Deploy Site
@@ -41,7 +32,6 @@ jobs:
           echo "PULL_REQUEST_NUMBER is $PULL_REQUEST_NUMBER"
         env:
           SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }}
-          PULL_REQUEST_NUMBER: ${{ steps.pr.outputs.id }}
 
       - name: Deploy has succeeded
         if: ${{ success() }}
@@ -49,7 +39,6 @@ jobs:
           echo "PULL_REQUEST_NUMBER is $PULL_REQUEST_NUMBER"
         env:
           BOT_URL: ${{ secrets.BOT_URL }}
-          PULL_REQUEST_NUMBER: ${{ steps.pr.outputs.id }}
 
       - name: Deploy has failed
         if: ${{ failure() }}
@@ -57,27 +46,17 @@ jobs:
           echo "PULL_REQUEST_NUMBER is $PULL_REQUEST_NUMBER"
         env:
           BOT_URL: ${{ secrets.BOT_URL }}
-          PULL_REQUEST_NUMBER: ${{ steps.pr.outputs.id }}
 
   # Build failed, update comment
   on-failure:
     name: Build failed
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    if: ${{ github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success' }}
+    env:
+      PULL_REQUEST_NUMBER: ${{ github.event.workflow_run.pull_requests.number }}
     steps:
-      - name: Download pr number
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          workflow: ${{ github.event.workflow_run.workflow_id }}
-          name: pr
-
-      - name: Output pr number
-        id: pr
-        run: echo "::set-output name=id::$(<pr.txt)"
-
       - name: Update comment
         run: |
           echo "PULL_REQUEST_NUMBER is $PULL_REQUEST_NUMBER"
         env:
           BOT_URL: ${{ secrets.BOT_URL }}
-          PULL_REQUEST_NUMBER: ${{ steps.pr.outputs.id }}
