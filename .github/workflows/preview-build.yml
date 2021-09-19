@@ -4,7 +4,7 @@ on: pull_request
 
 jobs:
   build:
-    name: Website Build 
+    name: Website Build
     runs-on: ubuntu-latest
     env:
       PULL_REQUEST_NUMBER: ${{ github.event.number }}
@@ -27,20 +27,9 @@ jobs:
       - name: Build website
         run: echo ${PULL_REQUEST_NUMBER} > dist/version.html
 
-      - name: Upload artifact    
+      - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: website
           path: dist/
           retention-days: 1
-
-      - name: Save pr number
-        if: ${{ always() }}
-        run: echo ${PULL_REQUEST_NUMBER} > ./pr.txt
-
-      - name: Upload pr number
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: pr
-          path: ./pr.txt
