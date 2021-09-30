@@ -1,0 +1,42 @@
+name: Test Depoly
+
+on:
+  workflow_run:
+    workflows: ["Test Build"]
+    types: [completed]
+
+jobs:
+  # Build successfully, start deployment
+  on-success:
+    name: Build successfully
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Show event
+        run: |
+          echo "github event is $GITHUB_JSON"
+        env:
+          GITHUB_JSON: ${{ toJSON(github.event) }}
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Setup node
+        uses: actions/setup-node@v2
+
+      - name: Cache
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: node_modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Build website
+        run: echo ${PULL_REQUEST_NUMBER} > dist/version.html
+
+      - name: Show Index.html
+        run: cat dist/index.html

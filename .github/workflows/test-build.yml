@@ -1,0 +1,37 @@
+name: Test Build
+
+on: pull_request
+
+jobs:
+  build:
+    name: Website Build
+    runs-on: ubuntu-latest
+    env:
+      PULL_REQUEST_NUMBER: ${{ github.event.number }}
+    steps:
+      - name: Show event
+        run: |
+          echo "github event is $GITHUB_JSON"
+        env:
+          GITHUB_JSON: ${{ toJSON(github.event) }}
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup node
+        uses: actions/setup-node@v2
+
+      - name: Cache
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: node_modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Build website
+        run: echo ${PULL_REQUEST_NUMBER} > dist/version.html
+
+      - name: Show Index.html
+        run: cat dist/index.html
